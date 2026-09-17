@@ -1,17 +1,16 @@
 /* ─────────────────────────────────────────────────────────────
-   PASTE YOUR FIREBASE SETTINGS HERE.
+   Firebase settings for the live teacher view.
+   Project: g6-science  ·  Realtime Database in asia-southeast1
 
-   Leave it exactly as it is and the pages still work — students
-   use the spoken codes and the teacher cannot see them live.
-
-   To turn the live view on, follow README.md step 2 and replace
-   the empty strings below with the values Firebase gives you.
+   These values are meant to be public — every Firebase web app
+   ships them in the page. What protects the data is the database
+   Rules tab, not this file.
    ───────────────────────────────────────────────────────────── */
 
 window.FIREBASE_CONFIG = {
-  apiKey:      "",
-  authDomain:  "",
-  databaseURL: "",
-  projectId:   "",
-  appId:       ""
+  apiKey:      "AIzaSyD_ZV0TljjxTKrNF_1z3hAnCjcmMSUPe7U",
+  authDomain:  "g6-science.firebaseapp.com",
+  databaseURL: "https://g6-science-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:   "g6-science",
+  appId:       "1:190895916973:web:89ff4b282068a9aff78324"
 };
