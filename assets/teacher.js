@@ -18,18 +18,17 @@ function boot(){
  $("#app").innerHTML=
  '<div class="eyebrow">The Olympia Schools · Grade 6 · Week 5 · Period E9</div>'+
  '<h2 class="title">Teacher control</h2>'+
- '<p class="sub">Type the class, then open the screens one at a time. You see every student as they work.</p>'+
- '<div class="tbar"><label style="font-size:13px;color:var(--muted)">Class</label>'+
- '<input id="room" placeholder="6H1" value="'+esc(room)+'">'+
+ '<p class="sub">Open the screens one at a time. Everybody online moves with you, finished or not.</p>'+
+ '<div class="tbar">'+
  '<span class="pillstat" id="stat">not connected</span>'+
- '<span class="pillstat" id="count">0 students</span></div>'+
+ '<span class="pillstat" id="count">0 students</span>'+
+ '<button class="btn ghost" id="wipe" style="margin-left:auto;color:var(--crimson);border-color:var(--crimson)">End session</button></div>'+
  '<div class="card" style="margin-bottom:16px"><div class="eyebrow">Open the screens</div>'+
  '<div id="steps" style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0"></div>'+
  '<div class="eyebrow" style="margin-top:14px">Not using a screen today? Switch it off</div>'+
  '<div id="skips" style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0"></div>'+
  '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="minus">&larr; Close one</button>'+
- '<button class="btn g" id="plus">Open the next screen &rarr;</button>'+
- '<button class="btn ghost" id="wipe" style="color:var(--crimson);border-color:var(--crimson)">Clear the class</button></div>'+
+ '<button class="btn g" id="plus">Open the next screen &rarr;</button></div>'+
  '<div class="hint" style="margin-top:12px" id="codehint"></div></div>'+
  '<div class="tsplit">'+
  '<div class="tprev"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
@@ -49,11 +48,15 @@ function boot(){
  steps();skips();codes();paint();
  $("#pvreload").onclick=()=>{const f=$("#pv");f.src="index.html?preview=1&r="+Date.now();};
  window.addEventListener("message",e=>{if(e.data&&e.data.ready)beam();});
- $("#room").oninput=e=>{room=e.target.value;try{localStorage.setItem("g6w5room",room);}catch(x){}connect();};
+
  $("#plus").onclick=()=>setStage(nextLive(stage,1));
  $("#minus").onclick=()=>setStage(nextLive(stage,-1));
- $("#wipe").onclick=()=>{if(confirm("Remove every student's work from this class board? Their own device keeps their work."))
-   {if(window.SYNC)SYNC.clearRoom(room);students={};paint();}};
+ $("#wipe").onclick=()=>{
+  if(!confirm("End the session?\n\nEvery student's work is deleted and their page restarts from screen 1. This cannot be undone."))return;
+  if(window.SYNC)SYNC.endSession();
+  students={};stage=1;steps();codes();beam();paint();
+  const b=$("#wipe");b.textContent="Session ended";setTimeout(()=>{b.textContent="End session";},2500);
+ };
  $("#sortn").onclick=()=>{sortBy="n";paint();};
  $("#sortp").onclick=()=>{sortBy="p";paint();};
  $("#only").onchange=paint;
@@ -108,8 +111,10 @@ function beam(){const f=$("#pv");if(!f||!f.contentWindow)return;
 
 function connect(){
  const ok=window.SYNC&&SYNC.available();
- $("#stat").textContent=!window.SYNC||!SYNC.configured?"no Firebase set up — codes only":ok?(room?"live · "+SYNC.room(room):"type a class"):"cannot reach Firebase";
- if(!ok||!room)return;
+ $("#stat").textContent=!window.SYNC||!SYNC.configured?"Firebase is not set up"
+   :ok?"● live — everyone online is shown":"cannot reach Firebase";
+ $("#stat").style.color=ok?"var(--green)":"var(--crimson)";
+ if(!ok)return;
  if(ref)SYNC.unwatch(ref);
  ref=SYNC.watchStudents(room,d=>{students=d||{};paint();});
  SYNC.setStage(room,stage);
@@ -155,13 +160,13 @@ function paint(){
  rows.sort(sortBy==="n"?(a,b)=>String(a.n).localeCompare(String(b.n))
                       :(a,b)=>((b.dn||[]).reduce((x,y)=>x+y,0))-((a.dn||[]).reduce((x,y)=>x+y,0)));
  $("#count").textContent=Object.keys(students).length+" student"+(Object.keys(students).length===1?"":"s");
- $("#empty").innerHTML=rows.length?"":'<div class="hint">Nobody has opened the page for this class yet. Check the class name matches what the students type on screen 1.</div>';
+ $("#empty").innerHTML=rows.length?"":'<div class="hint">Nobody has joined yet. Everyone who opens the student link and types a name appears here — whatever class they write.</div>';
  rows.forEach(r=>{
   const stale=Date.now()-(r.up||0)>90000;
   const c=el("div","stu"+(stale?" stale":""));
   const cur=r.st||1, stuck=!((r.dn||[])[cur-1]);
   c.innerHTML='<div class="nm">'+esc(r.n)+'</div>'+
-   '<div class="meta">screen '+cur+' of '+N+' · '+ago(r.up)+(stuck?' · <span style="color:var(--amber);font-weight:600">not finished</span>':'')+'</div>'+
+   '<div class="meta">'+(r.c?esc(r.c)+' · ':'')+'screen '+cur+' of '+N+' · '+ago(r.up)+(stuck?' · <span style="color:var(--amber);font-weight:600">not finished</span>':'')+'</div>'+
    '<div class="bars">'+SC.map((s,i)=>'<i class="'+((r.ex||[])[i]?"c":((r.dn||[])[i]?"d":""))+'"></i>').join("")+'</div>'+
    (r.pw||r.pe?'<div class="r"><div class="k">Races</div><div class="v">warm-up <b>'+(r.pw||0)+
      '</b>'+(r.ce!=null?' → exit <b>'+(r.pe||0)+'</b>'+

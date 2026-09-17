@@ -17,9 +17,10 @@ function boot(){
   return db;
 }
 
-function room(code){
-  return String(code||"").trim().toUpperCase().replace(/[^A-Z0-9-]/g,"") || "NOCLASS";
-}
+/* One shared room. Everybody who opens the page is in it, whatever
+   class they type — the class is only a label on their card. */
+const ROOM = "LIVE";
+function room(){ return ROOM; }
 
 window.SYNC = {
   available(){ return !!boot(); },
@@ -71,7 +72,21 @@ window.SYNC = {
   unwatch(ref){ try{ if(ref) ref.off(); }catch(e){} },
   clearRoom(roomCode){
     const d = boot(); if(!d) return;
-    try{ d.ref("rooms/"+room(roomCode)).remove(); }catch(e){}
+    try{ d.ref("rooms/"+room()+"/students").remove(); }catch(e){}
+  },
+  /* wipe everyone's work and reload every open page */
+  endSession(){
+    const d = boot(); if(!d) return;
+    try{
+      d.ref("rooms/"+room()+"/students").remove();
+      d.ref("rooms/"+room()+"/push").remove();
+      d.ref("rooms/"+room()+"/stage").set(1);
+      d.ref("rooms/"+room()+"/reset").set(Date.now());
+    }catch(e){}
+  },
+  watchReset(fn){
+    const d = boot(); if(!d) return;
+    try{ d.ref("rooms/"+room()+"/reset").on("value", s=>fn(s.val()||0)); }catch(e){}
   },
   room: room
 };

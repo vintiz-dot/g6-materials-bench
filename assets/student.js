@@ -107,7 +107,7 @@ function prevOf(n){for(let i=n-1;i>=1;i--)if(live(i))return i;return null;}
 let pT=null;
 function pushSoon(){if(PREVIEW||!window.SYNC||!SYNC.available())return;clearTimeout(pT);pT=setTimeout(pushNow,1200);}
 function pushNow(){
- if(PREVIEW||!window.SYNC||!SYNC.available()||!txt(S.cls))return;
+ if(PREVIEW||!window.SYNC||!SYNC.available()||txt(S.name).length<2)return;
  SYNC.push(S.cls,S.id,{
   n:txt(S.name)||"(no name)",nk:nick(),c:txt(S.cls),st:S.stage,up:Date.now(),
   pw:(S.qz.warm||{}).pts||0, pe:(S.qz.exit||{}).pts||0,
@@ -137,7 +137,7 @@ function liveBadge(){
  if(!b){b=el("div","","<span class=\"d\"></span><span id=\"livetx\">connecting…</span>");b.id="live";document.body.appendChild(b);}
  const ok=SYNC.available();
  b.classList.toggle("on",ok);
- $("#livetx").textContent=ok?"Your teacher can see this":"Offline — work is saved here";
+ $("#livetx").textContent=ok?"Connected to your teacher":"Offline — work is saved here";
 }
 
 /* ───────── nav ───────── */
@@ -332,7 +332,7 @@ function r1(){
  const upd=()=>{const ok=txt(S.name).length>=2&&txt(S.cls).length>=2;
   gw.hidden=!ok;nw.hidden=!ok;nk.textContent=nick();refresh();};
  nm.oninput=()=>{S.name=nm.value;save();upd();};
- cl.oninput=()=>{S.cls=cl.value;save();upd();watchRemote();};
+ cl.oninput=()=>{S.cls=cl.value;save();upd();};
  upd();
 }
 
@@ -790,7 +790,8 @@ function r9(){
 }
 
 /* ───────── remote unlock ───────── */
-let watching="",lastPush=0;
+let watching=false,lastPush=0,seenReset=0;
+try{seenReset=+localStorage.getItem("g6w5reset")||0;}catch(e){}
 function toast(msg){
  let t=$("#toast");
  if(!t){t=el("div","",'');t.id="toast";document.body.appendChild(t);}
@@ -799,17 +800,24 @@ function toast(msg){
 }
 function watchRemote(){
  if(PREVIEW||!window.SYNC||!SYNC.available())return;
- const r=SYNC.room(S.cls);
- if(!r||r===watching)return;
- watching=r;
+ if(watching)return;
+ watching=true;
  SYNC.watchStage(S.cls,n=>{
   const was=remoteStage;remoteStage=n||1;
   if(remoteStage===was){refresh();return;}
   for(let i=1;i<=remoteStage;i++)S.open[i]=true;save();
-  if(remoteStage>was&&done(S.stage)&&S.stage<remoteStage&&nextOf(S.stage))show(nextOf(S.stage));
-  else refresh();
+  /* the teacher moves the whole class, finished or not */
+  if(S.stage!==remoteStage&&txt(S.name).length>=2){
+   if(remoteStage>was&&!done(S.stage))toast("Your teacher moved the class on.");
+   show(remoteStage);
+  }else refresh();
  });
  SYNC.watchBoard(S.cls,rs=>{boardRows=rs||[];if(boardPaint)boardPaint();});
+ SYNC.watchReset(v=>{
+  if(!v||v<=seenReset)return;
+  try{localStorage.setItem("g6w5reset",String(v));localStorage.removeItem(LSKEY);}catch(e){}
+  location.reload();
+ });
  SYNC.watchSkip(S.cls,sk=>{
   const before=JSON.stringify(S.skip);
   S.skip={};Object.keys(sk||{}).forEach(k=>{if(sk[k])S.skip[+k]=true;});
@@ -846,7 +854,8 @@ if(PREVIEW){
 /* ───────── boot ───────── */
 S.open[1]=true;
 liveBadge();
-setTimeout(()=>{liveBadge();watchRemote();pushNow();},1500);
+setTimeout(()=>{liveBadge();watchRemote();pushNow();},1200);
+setTimeout(()=>{liveBadge();watchRemote();},4000);
 setInterval(pushNow,15000);
 show(Math.min(S.stage||1,N));
 })();

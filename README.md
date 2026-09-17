@@ -83,16 +83,22 @@ Do not store anything else there. Press **Clear the class** on the teacher page 
 
 ## 3 · Running the lesson
 
-1. Open `teacher.html` on your own screen. Type the class, e.g. **6H1**.
+1. Open `teacher.html` on your own screen. It connects on its own — there is nothing to type.
 2. Send the student link in the meeting chat.
-3. Students type their name and class on screen 1, pick a racing animal, and tap
-   **Join the class**. The class they type must match what you typed — `6H1`, not `6h 1`.
-4. Press **Open the next screen** when you want the class to move. Everybody who has
-   finished advances; anybody still working stays where they are and follows when they finish.
-5. Watch the cards. Each card shows a student's name, which screen they are on, a progress
-   bar for all twelve screens, and every answer they have typed so far, updating as they type.
-   A student who has not finished the screen they are on is marked **not finished**.
+3. Students type their name and class, pick a racing animal, and tap **Join the class**.
+   They all appear on your board within a couple of seconds, whatever class they write.
+4. Press **Open the next screen** when you want the class to move. **Everybody moves** —
+   finished or not. A student who was mid-answer sees *Your teacher moved the class on.*
+5. Watch the cards. Each shows the name, their class, which screen they are on, a progress
+   bar for all twelve screens, and every answer as they type it. A student who has not
+   finished the screen they are on is marked **not finished**.
 6. A card fades when a student has done nothing for 90 seconds.
+7. **End session** at the end: it deletes everybody's work from the board, resets to screen 1,
+   and reloads every student page instantly so the next class starts clean. It cannot be undone.
+
+Everyone who opens the student page is in the same room. The class they type is only a label
+on their card — it no longer has to match anything.
+
 
 ### The preview window
 
