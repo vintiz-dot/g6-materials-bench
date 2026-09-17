@@ -34,6 +34,12 @@ window.SYNC = {
     const d = boot(); if(!d) return;
     try{ d.ref("rooms/"+room(roomCode)+"/stage").on("value", s=>fn(s.val()||1)); }catch(e){}
   },
+  watchBoard(roomCode, fn){
+    const d = boot(); if(!d) return;
+    try{ d.ref("rooms/"+room(roomCode)+"/students").on("value", s=>{
+      const v = s.val()||{}; fn(Object.keys(v).map(k=>Object.assign({id:k}, v[k])));
+    }); }catch(e){}
+  },
   watchSkip(roomCode, fn){
     const d = boot(); if(!d) return;
     try{ d.ref("rooms/"+room(roomCode)+"/skip").on("value", s=>fn(s.val()||{})); }catch(e){}

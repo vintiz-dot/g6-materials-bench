@@ -9,7 +9,7 @@ let room="", ref=null, students={}, stage=1, skip={};
 try{skip=JSON.parse(localStorage.getItem("g6w5skip")||"{}");}catch(e){skip={};}
 try{room=localStorage.getItem("g6w5room")||"";}catch(e){}
 
-const A=[["groups","Groups"],["q1","Question 1"],["q2","Question 2"],["qs","Sorted A/B/C"],
+const A=[["quiz","Quiz scores"],["table","Property table"],["groups","Groups"],["q1","Question 1"],["q2","Question 2"],["qs","Sorted A/B/C"],
  ["stand","Stands"],["standWhy","Because"],["why","Why-matching"],["quadWrong","Wrong box"],
  ["link","Link sentence"],["durPos","Lasting → easy"],["durNeg","Lasting → impossible"],
  ["def","Our rule"],["match","Book Q1"],["talk","Talk & Write"],["extra","Extra work"]];
@@ -37,6 +37,7 @@ function boot(){
  '<div style="display:flex;gap:7px"><button class="btn ghost" id="pvreload" style="padding:5px 11px;font-size:12.5px">Reset</button>'+
  '<a class="btn ghost" id="pvopen" href="index.html" target="_blank" rel="noopener" style="padding:5px 11px;font-size:12.5px;text-decoration:none">Open full size</a></div></div>'+
  '<div class="frame"><iframe id="pv" title="Student view" src="index.html?preview=1"></iframe></div>'+
+ '<div id="race"></div>'+
  '<div style="font-size:12.5px;color:var(--muted);margin-top:9px">This is a real copy of the student page. Click about in it — nothing you do here reaches the class or the board.</div>'+
  '</div></div>'+
  '<div class="tstu">'+
@@ -98,7 +99,7 @@ function codes(){
 function nextLive(from,dir){let i=from+dir;
  while(i>=1&&i<=N&&skip[i])i+=dir;
  return Math.max(1,Math.min(N,i));}
-function setStage(n){stage=n;steps();beam();if(window.SYNC&&SYNC.available()&&room)SYNC.setStage(room,n);}
+function setStage(n){stage=n;steps();beam();race();if(window.SYNC&&SYNC.available()&&room)SYNC.setStage(room,n);}
 function beam(){const f=$("#pv");if(!f||!f.contentWindow)return;
  try{f.contentWindow.postMessage({go:stage,skip:skip},"*");}catch(e){}}
 
@@ -112,8 +113,40 @@ function connect(){
  SYNC.setSkip(room,skip);
 }
 
+function race(){
+ const w=$("#race");if(!w)return;
+ const cfg=SC[stage-1], which=cfg&&cfg.quiz;
+ const rs=Object.keys(students).map(k=>students[k]).filter(Boolean);
+ if(!which||!rs.length){w.innerHTML="";return;}
+ const key=which==="warm"?"pw":"pe", ck=which==="warm"?"cw":"ce", spec=which==="warm"?L.quizWarm:L.quizExit;
+ const board=rs.map(r=>({n:r.nk||r.n,p:r[key]||0,c:r[ck]})).sort((a,b)=>b.p-a.p);
+ const finished=board.filter(r=>r.c!=null).length;
+ /* per-question distribution */
+ const dist=spec.map((q,i)=>{
+   const c=[0,0,0,0];let seen=0;
+   rs.forEach(r=>{const pk=((r.qa||{})[which==="warm"?"w":"e"]||[])[i];
+     if(pk!=null&&pk>=0){c[pk]++;seen++;}else if(pk===-1)seen++;});
+   return {q:q.q,a:q.a,c:c,seen:seen};
+ });
+ w.innerHTML='<div class="card" style="margin-top:14px"><div class="eyebrow">'+
+  (which==="warm"?"Warm-up race":"Exit ticket race")+' · '+finished+' of '+rs.length+' finished</div>'+
+  '<div class="lb" style="border:0;padding:0;margin:10px 0 4px">'+
+  board.slice(0,8).map((r,i)=>'<div class="lbrow"><span class="pos">'+(i+1)+'</span>'+
+   '<span class="who">'+esc(r.n)+'</span><span class="pt">'+r.p+'</span></div>').join("")+'</div>'+
+  '<div class="eyebrow" style="margin-top:14px">How the class answered</div>'+
+  dist.map((d,i)=>{
+   const tot=Math.max(1,d.c.reduce((x,y)=>x+y,0));
+   const pcRight=Math.round(d.c[d.a]/tot*100);
+   if(!d.seen)return "";
+   return '<div class="qd"><div class="qdq"><b>Q'+(i+1)+'</b> '+esc(d.q)+
+    '<span class="qdp'+(pcRight<50?" low":"")+'">'+pcRight+'% right</span></div>'+
+    '<div class="qdbar">'+d.c.map((v,k)=>'<i class="'+(k===d.a?"ok":"")+'" style="width:'+
+      Math.round(v/tot*100)+'%" title="'+esc(spec[i].o[k])+': '+v+'"></i>').join("")+'</div></div>';
+  }).join("")+'</div>';
+}
 function paint(){
  const g=$("#grid");g.innerHTML="";
+ race();
  let rows=Object.keys(students).map(k=>students[k]).filter(Boolean);
  if($("#only").checked)rows=rows.filter(r=>(r.st||1)<stage||!(r.dn||[])[ (r.st||1)-1 ]);
  rows.sort(sortBy==="n"?(a,b)=>String(a.n).localeCompare(String(b.n))
@@ -127,6 +160,10 @@ function paint(){
   c.innerHTML='<div class="nm">'+esc(r.n)+'</div>'+
    '<div class="meta">screen '+cur+' of '+N+' · '+ago(r.up)+(stuck?' · <span style="color:var(--amber);font-weight:600">not finished</span>':'')+'</div>'+
    '<div class="bars">'+SC.map((s,i)=>'<i class="'+((r.ex||[])[i]?"c":((r.dn||[])[i]?"d":""))+'"></i>').join("")+'</div>'+
+   (r.pw||r.pe?'<div class="r"><div class="k">Races</div><div class="v">warm-up <b>'+(r.pw||0)+
+     '</b>'+(r.ce!=null?' → exit <b>'+(r.pe||0)+'</b>'+
+     (r.cw!=null?' · <span style="color:var(--green);font-weight:700">'+((r.ce-r.cw)>=0?"+":"")+(r.ce-r.cw)+' correct</span>':""):"")+
+     '</div></div>':"")+
    A.map(([k,lab])=>{const v=(r.a||{})[k];if(v==null||String(v).trim()==="")return "";
      return '<div class="r"><div class="k">'+lab+'</div><div class="v">'+esc(v)+'</div></div>';}).join("");
   const id=idOf(r);

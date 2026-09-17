@@ -68,6 +68,17 @@ whyQ: {
 props: ["hard","flexible","waterproof","light","see-through","cheap","lasts a long time"],
 funcs: ["holds water","protects a phone","keeps food fresh","lets light through"],
 
+/* ── property table · match the meaning, then add your own job ── */
+propTable: [
+ ["Strength",     "It does not break when you push it or pull it.", "bridge cables · bottle caps · bicycle frames"],
+ ["Flexibility",  "It bends, and it can spring back.",              "hose pipes · packaging film · shoe soles"],
+ ["Hardness",     "You cannot scratch it or dent it.",              "work surfaces · tools · floor tiles"],
+ ["Density",      "How heavy it is for its size.",                  "aircraft parts · bottles you have to carry"],
+ ["Waterproofing","It does not soak up water.",                     "raincoats · food packaging · pipes"],
+ ["Durability",   "It does not break down over a long time.",       "water pipes · window frames"],
+ ["Transparency", "Light goes through it. You can see through it.", "windows · bottles you need to see into"]
+],
+
 /* ── screen 8 · book page 25 ── */
 match: [
   ["Metal","found in the ground; strong, hard and shiny"],
@@ -92,24 +103,133 @@ talk: [
 
 /* ── extension · shown only when the screen task is finished ── */
 extra: {
-  2:"Look at the word PROPERTY. Write one property of your pen.",
-  3:"Look at your groups. Which group has the most things in it? Why do you think so?",
-  4:"Write one more question. Start with: How could we…?",
-  5:"Write the name of one thing made of plastic that helps people.",
-  6:"Choose one thing in your room. Write: ___ is made of ___ because ___.",
-  7:"Find one property that is GOOD for one job and BAD for another job. Write both jobs.",
-  8:"What is one thing in your school that should be made of a different material? Why?"
+  3:"Look at the word PROPERTY. Write one property of your pen.",
+  4:"Look at your groups. Which group has the most things in it? Why do you think so?",
+  5:"Write one more question. Start with: How could we…?",
+  6:"Write the name of one thing made of plastic that helps people.",
+  7:"Choose one thing in your room. Write: ___ is made of ___ because ___.",
+  8:"Find one property that is GOOD for one job and BAD for another job. Write both jobs.",
+  9:"Choose one more property. Write a job it makes IMPOSSIBLE.",
+ 10:"What is one thing in your school that should be made of a different material? Why?"
+},
+
+/* ── animals for the leaderboard nickname ── */
+animals: ["Tiger","Dragon","Panda","Shark","Eagle","Fox","Whale","Owl","Rhino","Cobra",
+          "Falcon","Buffalo","Dolphin","Leopard","Phoenix","Crab","Turtle","Wolf"],
+
+/* ── screen 2 · warm-up quiz · what do you already know? ── */
+quizWarm: [
+ {q:"Ice, water and steam. How many different materials is this?",
+  o:["1 — it is all water","2","3","None of them"],a:0,
+  w:"All water. Only the STATE changes. That was last week."},
+ {q:"You heat something. What do the particles do?",
+  o:["They move faster","They stop moving","They get bigger","They disappear"],a:0,
+  w:"Heat gives particles energy, so they move faster."},
+ {q:"A window is made of…", o:["glass","wood","fabric","rubber"],a:0,
+  w:"Glass. Soon you will say WHY."},
+ {q:"A T-shirt is made of…", o:["fabric","metal","glass","wood"],a:0,
+  w:"Fabric — thin threads woven together."},
+ {q:"Chopsticks are usually made of…", o:["wood","glass","fabric","paper"],a:0,
+  w:"Wood. Light, cheap, easy to cut."},
+ {q:"A drink can is made of…", o:["metal","paper","wood","glass"],a:0,
+  w:"Metal — thin, strong and it does not leak."},
+ {q:"Which one does NOT let water through?",
+  o:["a plastic bag","a paper napkin","a cloth towel","a piece of wood"],a:0,
+  w:"Only plastic keeps the water out. Remember that word: waterproof."},
+ {q:"Which one is the hardest?", o:["metal","paper","fabric","a sponge"],a:0,
+  w:"Metal. You cannot scratch it with a coin."},
+ {q:"Plastic stays in the ground for 400 years. Is that good or bad?",
+  o:["Bad","Good","It depends on the job","Nobody knows"],a:2,
+  w:"Remember your answer! You will see this question again at the end."},
+ {q:"Who decides that a bottle is made of plastic?",
+  o:["A person, for a reason","Nobody","The machine","It just happens"],a:0,
+  w:"A person chose it. Today we find out what they were thinking."}
+],
+
+/* ── screen 10 · exit ticket · did the idea land? ── */
+quizExit: [
+ {q:"What is a PROPERTY?",
+  o:["Something the material IS","A job the material does","The price of it","The colour of the box"],a:0,
+  w:"A property is what the material IS: hard, light, waterproof."},
+ {q:"What is a JOB (a function)?",
+  o:["Something the material DOES","Something the material IS","The name of the shop","How heavy it is"],a:0,
+  w:"A job is what it DOES: holds water, keeps food fresh."},
+ {q:"Which one is a PROPERTY?",
+  o:["waterproof","holds water","keeps food fresh","protects a phone"],a:0,
+  w:"Waterproof is what it IS. The other three are jobs."},
+ {q:"Which one is a JOB?",
+  o:["lets light through","hard","cheap","light"],a:0,
+  w:"Lets light through is what it DOES."},
+ {q:"After the word BECAUSE we always say…",
+  o:["a property","the name of the object","the price","the shop"],a:0,
+  w:"After because comes a property. That is the reason somebody chose it."},
+ {q:"A raincoat is made of plastic because plastic is…",
+  o:["waterproof","heavy","soft","see-through"],a:0,
+  w:"Waterproof. The rain runs off it."},
+ {q:"A window is made of glass because glass is…",
+  o:["see-through","heavy","soft","cheap"],a:0,
+  w:"See-through. That property makes the job possible."},
+ {q:"Plastic lasts a very long time. This makes ONE job impossible. Which one?",
+  o:["Throwing it away safely","Making a water pipe","Making a bottle","Making a chair"],a:0,
+  w:"The same property makes pipes easy AND makes throwing it away impossible."},
+ {q:"Plastic lasts a long time. Is that good or bad?",
+  o:["It depends on the job","Bad","Good","Nobody knows"],a:0,
+  w:"It depends on the job. This is the big idea of today's lesson."},
+ {q:"Which sentence is a RULE that works for EVERY material?",
+  o:["We choose a material when its properties match the job",
+     "Plastic is bad","Metal is the strongest","Glass breaks easily"],a:0,
+  w:"A rule must work for a material you have never seen. Only the first one does."}
+],
+
+/* ── concept-checking questions · they gate the task ── */
+ccq: {
+ 4:{ hd:"Before you start — check you understand",
+     items:[
+  {q:"Can I put things together because we use them in the kitchen?",o:["No","Yes"],a:0,
+   w:"No. That is where we USE them."},
+  {q:"Can a plastic bottle and a plastic bag go in the same group?",o:["Yes","No"],a:0,
+   w:"Yes. They are made of the same thing."},
+  {q:"How many groups must I make?",o:["You choose","Always 3","Always 6"],a:0,
+   w:"You choose. There is no right number."}]},
+ 7:{ hd:"Before you start — check you understand",
+     items:[
+  {q:"In these sentences, which part tells you WHY?",o:["the part AFTER because","the part BEFORE because"],a:0,
+   w:"The reason always comes after because."}]},
+ 8:{ hd:"Before you start — check you understand",
+     items:[
+  {q:"A raincoat keeps you dry. Is that a property or a job?",o:["a job","a property"],a:0,
+   w:"Keeping you dry is what it DOES. That is a job."},
+  {q:"Plastic is waterproof. Is that a property or a job?",o:["a property","a job"],a:0,
+   w:"Waterproof is what it IS. That is a property."}]},
+ 10:{ hd:"Before you write — check you understand",
+     items:[
+  {q:"Which word can go in the LAST gap? “… because it is ______.”",o:["cheap","bottles"],a:0,
+   w:"The last gap must be a property. “Bottles” is a job."}]}
+},
+
+/* ── the generalization check that closes screen 8 ── */
+sayback:{
+ hd:"Say the rule back",
+ items:[
+  {q:"“Lasting a long time” is…",o:["It depends on the job","Good","Bad"],a:0,
+   w:"One property. Good for a pipe, terrible for a bin. It depends on the job."},
+  {q:"Which sentence is a rule for EVERY material — even one nobody has invented yet?",
+   o:["We choose a material when its properties match the job","Plastic is bad","Wood comes from trees"],a:0,
+   w:"That is your rule. Write it in your book."}]
 },
 
 screens: [
-  {n:1,  code:null, min:3, title:"Start",                  short:"Start"},
-  {n:2,  code:"17", min:6, title:"Eight words",            short:"Words"},
-  {n:3,  code:"43", min:8, title:"The pile",               short:"Pile"},
-  {n:4,  code:"26", min:4, title:"Your questions",         short:"Questions"},
-  {n:5,  code:"58", min:3, title:"Where do you stand",     short:"Stand"},
-  {n:6,  code:"34", min:6, title:"Why is it made of that?",short:"Why"},
-  {n:7,  code:"71", min:8, title:"Property and job",       short:"Property"},
-  {n:8,  code:"92", min:5, title:"Book page 25",           short:"Book"},
-  {n:9,  code:null, min:2, title:"Your page",              short:"Summary"}
+  {n:1,  code:null, min:1, title:"Start",                   short:"Start"},
+  {n:2,  code:"17", min:5, title:"Warm-up race",            short:"Warm-up", quiz:"warm"},
+  {n:3,  code:"43", min:3, title:"Eight words",             short:"Words"},
+  {n:4,  code:"26", min:6, title:"The pile",                short:"Pile"},
+  {n:5,  code:"58", min:3, title:"Your questions",          short:"Questions"},
+  {n:6,  code:"34", min:2, title:"Where do you stand",      short:"Stand"},
+  {n:7,  code:"71", min:4, title:"Why is it made of that?", short:"Why"},
+  {n:8,  code:"92", min:6, title:"Property and job",        short:"Property"},
+  {n:9,  code:"39", min:6, title:"What each property does", short:"Table"},
+  {n:10, code:"60", min:4, title:"Book page 25",            short:"Book"},
+  {n:11, code:"85", min:4, title:"Exit ticket race",        short:"Exit", quiz:"exit"},
+  {n:12, code:null, min:1, title:"Your page",               short:"Summary"}
 ]
 };
