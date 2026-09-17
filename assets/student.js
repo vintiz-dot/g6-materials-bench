@@ -32,7 +32,7 @@ const IC={
 const svg=k=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(IC[k]||'')+'</svg>';
 
 /* ───────── state ───────── */
-const BLANK={id:"",name:"",cls:"",stage:1,open:{1:true},read:{},groups:[{n:"",items:[]},{n:"",items:[]},{n:"",items:[]}],
+const BLANK={id:"",name:"",cls:"",stage:1,open:{1:true},excused:{},skip:{},read:{},groups:[{n:"",items:[]},{n:"",items:[]},{n:"",items:[]}],
  placed:{},q1:"",q2:"",qs:{},stand:null,standWhy:"",why:{},whyQ:null,quad:{},link:"",durPos:"",durNeg:"",def:"",
  match:{},mTries:0,talk:{},extra:{}};
 let S;
@@ -56,7 +56,9 @@ $("#modal").addEventListener("click",e=>{if(e.target.id==="modal")$("#modal").cl
 /* ───────── completion ───────── */
 function talkDone(i){const t=S.talk[i]||{};return L.talk[i].single?!!txt(t.a):(!!txt(t.a)&&!!txt(t.b));}
 function goodGroups(){return S.groups.filter(g=>txt(g.n).length>=3&&!banned(g.n));}
-function done(n){switch(n){
+function done(n){
+ if(S.skip[n]||S.excused[n])return true;
+ switch(n){
  case 1:return txt(S.name).length>=2&&txt(S.cls).length>=2;
  case 2:return L.words.every((w,i)=>S.read[i]);
  case 3:return goodGroups().length>=2&&Object.keys(S.placed).length>=12;
@@ -77,6 +79,10 @@ function todo(n){switch(n){
  case 8:return "Match all five, then finish the four sentences.";
  default:return "";}}
 
+function live(n){return !S.skip[n];}
+function nextOf(n){for(let i=n+1;i<=N;i++)if(live(i))return i;return null;}
+function prevOf(n){for(let i=n-1;i>=1;i--)if(live(i))return i;return null;}
+
 /* ───────── sync ───────── */
 let pT=null;
 function pushSoon(){if(!window.SYNC||!SYNC.available())return;clearTimeout(pT);pT=setTimeout(pushNow,1200);}
@@ -85,6 +91,7 @@ function pushNow(){
  SYNC.push(S.cls,S.id,{
   n:txt(S.name)||"(no name)",c:txt(S.cls),st:S.stage,up:Date.now(),
   dn:SC.map(c=>done(c.n)?1:0),
+  ex:SC.map(c=>(S.excused[c.n]||S.skip[c.n])?1:0),
   a:{
    groups:S.groups.filter(g=>txt(g.n)||g.items.length).map(g=>txt(g.n)+": "+g.items.map(i=>L.pile[+i.slice(1)][1]).join(", ")).join(" | "),
    q1:S.q1,q2:S.q2,qs:(S.qs[1]||"-")+"/"+(S.qs[2]||"-"),
@@ -108,12 +115,15 @@ function liveBadge(){
 
 /* ───────── nav ───────── */
 function maxOpen(){let m=1;for(let i=1;i<=N;i++){if(S.open[i]||i<=remoteStage)m=i;else break;}return m;}
-function dots(){const d=$("#dots");d.innerHTML="";for(let i=1;i<=N;i++){const x=el("div","dot");if(done(i)&&i<S.stage)x.classList.add("done");if(i===S.stage)x.classList.add("now");d.appendChild(x);}}
+function dots(){const d=$("#dots");d.innerHTML="";for(let i=1;i<=N;i++){const x=el("div","dot");
+ if(!live(i)){x.classList.add("skip");d.appendChild(x);continue;}
+ if(done(i)&&i<S.stage)x.classList.add("done");if(i===S.stage)x.classList.add("now");d.appendChild(x);}}
 let tInt=null;
 function timer(m){clearInterval(tInt);const end=Date.now()+m*60000;const t=()=>{const r=Math.max(0,end-Date.now());const c=$("#clock");
  c.textContent=Math.floor(r/60000)+":"+String(Math.floor(r%60000/1000)).padStart(2,"0");
  c.style.color=r<=0?"#F07A63":r<60000?"#E0A93F":"#9FC4D4";};t();tInt=setInterval(t,1000);}
 function show(n){
+ if(!live(n)){const f=nextOf(n)||prevOf(n)||1;if(f!==n)return show(f);}
  S.stage=n;save();
  document.querySelectorAll(".scr").forEach(s=>{s.classList.remove("on");});
  let sec=document.getElementById("s"+n);
@@ -125,21 +135,24 @@ function show(n){
  window.scrollTo(0,0);
  if(S.open[n]||n<=remoteStage){S.open[n]=true;timer(cfg.min);render(n);}
  else{clearInterval(tInt);$("#clock").textContent="🔒";gate(n);}
- $("#back").disabled=(n===1);
  refresh();
 }
 function refresh(){
  const n=S.stage,ok=done(n);
  dots();
- const nx=$("#next");
- if(n===N){nx.textContent="Save my page";nx.disabled=false;$("#navNote").textContent="Print it, or copy it to your teacher.";return;}
+ const nx=$("#next"),last=!nextOf(n);
+ $("#back").disabled=!prevOf(n);
+ if(last){nx.textContent="Save my page";nx.disabled=false;$("#navNote").textContent="Print it, or copy it to your teacher.";return;}
  nx.textContent="Next";
  const unlocked=S.open[n]||n<=remoteStage;
  nx.disabled=!unlocked||!ok;
- $("#navNote").textContent=!unlocked?"Wait for your teacher.":ok?"Finished. You can go on.":todo(n);
+ $("#navNote").textContent=!unlocked?"Wait for your teacher."
+  :S.excused[n]?"Your teacher said you can go on."
+  :ok?"Finished. You can go on.":todo(n);
 }
-$("#back").onclick=()=>{if(S.stage>1)show(S.stage-1);};
-$("#next").onclick=()=>{if(S.stage<N){if(done(S.stage))show(S.stage+1);}else window.print();};
+$("#back").onclick=()=>{const p=prevOf(S.stage);if(p)show(p);};
+$("#next").onclick=()=>{const nx=nextOf(S.stage);
+ if(nx){if(done(S.stage))show(nx);}else window.print();};
 
 function gate(n){
  const sec=document.getElementById("s"+n);
@@ -521,7 +534,7 @@ function checks(){
 }
 function r9(){
  const s=document.getElementById("s9");
- const ck=checks(),miss=ck.filter(c=>!c[2]);
+ const ck=checks().filter(c=>live(c[0])&&!S.excused[c[0]]),miss=ck.filter(c=>!c[2]);
  const row=(k,v)=>'<div class="row"><div class="k">'+k+'</div><div class="v">'+(txt(v)?esc(v):'<em>not answered</em>')+'</div></div>';
  const gl=S.groups.filter(g=>txt(g.n)||g.items.length)
    .map(g=>'<b>'+esc(txt(g.n)||"(no name)")+'</b> — '+(g.items.map(i=>L.pile[+i.slice(1)][1]).join(", ")||"empty")).join("<br>");
@@ -573,7 +586,13 @@ function r9(){
 }
 
 /* ───────── remote unlock ───────── */
-let watching="";
+let watching="",lastPush=0;
+function toast(msg){
+ let t=$("#toast");
+ if(!t){t=el("div","",'');t.id="toast";document.body.appendChild(t);}
+ t.textContent=msg;t.classList.add("on");
+ clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),4200);
+}
 function watchRemote(){
  if(!window.SYNC||!SYNC.available())return;
  const r=SYNC.room(S.cls);
@@ -583,6 +602,21 @@ function watchRemote(){
   const was=remoteStage;remoteStage=n||1;
   if(remoteStage>was){for(let i=1;i<=remoteStage;i++)S.open[i]=true;save();
    if(!document.getElementById("s"+S.stage).querySelector(".gate"))refresh();else show(S.stage);}
+ });
+ SYNC.watchSkip(S.cls,sk=>{
+  const before=JSON.stringify(S.skip);
+  S.skip={};Object.keys(sk||{}).forEach(k=>{if(sk[k])S.skip[+k]=true;});
+  if(JSON.stringify(S.skip)!==before){save();show(S.stage);}
+ });
+ SYNC.watchPush(S.cls,S.id,p=>{
+  if(!p||!p.to||p.at===lastPush)return;
+  lastPush=p.at;
+  const to=Math.max(1,Math.min(N,p.to));
+  if(to<=S.stage)return;
+  for(let i=1;i<to;i++){S.open[i]=true;if(!done(i))S.excused[i]=true;}
+  S.open[to]=true;save();
+  toast("Your teacher moved you on. You do not need to finish that screen.");
+  show(to);
  });
 }
 

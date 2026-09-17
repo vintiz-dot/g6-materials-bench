@@ -34,11 +34,27 @@ window.SYNC = {
     const d = boot(); if(!d) return;
     try{ d.ref("rooms/"+room(roomCode)+"/stage").on("value", s=>fn(s.val()||1)); }catch(e){}
   },
+  watchSkip(roomCode, fn){
+    const d = boot(); if(!d) return;
+    try{ d.ref("rooms/"+room(roomCode)+"/skip").on("value", s=>fn(s.val()||{})); }catch(e){}
+  },
+  watchPush(roomCode, id, fn){
+    const d = boot(); if(!d) return;
+    try{ d.ref("rooms/"+room(roomCode)+"/push/"+id).on("value", s=>fn(s.val())); }catch(e){}
+  },
 
   /* ---- teacher ---- */
   setStage(roomCode, n){
     const d = boot(); if(!d) return;
     try{ d.ref("rooms/"+room(roomCode)+"/stage").set(n); }catch(e){}
+  },
+  setSkip(roomCode, obj){
+    const d = boot(); if(!d) return;
+    try{ d.ref("rooms/"+room(roomCode)+"/skip").set(obj||{}); }catch(e){}
+  },
+  pushStudent(roomCode, id, n){
+    const d = boot(); if(!d) return;
+    try{ d.ref("rooms/"+room(roomCode)+"/push/"+id).set({to:n, at:Date.now()}); }catch(e){}
   },
   watchStudents(roomCode, fn){
     const d = boot(); if(!d) return null;

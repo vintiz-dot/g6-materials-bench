@@ -5,7 +5,8 @@ const L=window.LESSON, SC=L.screens, N=SC.length;
 const $=s=>document.querySelector(s);
 const el=(t,c,h)=>{const d=document.createElement(t);if(c)d.className=c;if(h!=null)d.innerHTML=h;return d;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-let room="", ref=null, students={}, stage=1;
+let room="", ref=null, students={}, stage=1, skip={};
+try{skip=JSON.parse(localStorage.getItem("g6w5skip")||"{}");}catch(e){skip={};}
 try{room=localStorage.getItem("g6w5room")||"";}catch(e){}
 
 const A=[["groups","Groups"],["q1","Question 1"],["q2","Question 2"],["qs","Sorted A/B/C"],
@@ -24,6 +25,8 @@ function boot(){
  '<span class="pillstat" id="count">0 students</span></div>'+
  '<div class="card" style="margin-bottom:16px"><div class="eyebrow">Open the screens</div>'+
  '<div id="steps" style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0"></div>'+
+ '<div class="eyebrow" style="margin-top:14px">Not using a screen today? Switch it off</div>'+
+ '<div id="skips" style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0"></div>'+
  '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="minus">&larr; Close one</button>'+
  '<button class="btn g" id="plus">Open the next screen &rarr;</button>'+
  '<button class="btn ghost" id="wipe" style="color:var(--crimson);border-color:var(--crimson)">Clear the class</button></div>'+
@@ -33,10 +36,10 @@ function boot(){
  '<label class="pillstat" style="font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="only" style="width:16px;height:16px;accent-color:var(--green)"> show only students who are behind</label></div>'+
  '<div class="tgrid" id="grid"></div><div id="empty"></div>';
 
- steps();codes();paint();
+ steps();skips();codes();paint();
  $("#room").oninput=e=>{room=e.target.value;try{localStorage.setItem("g6w5room",room);}catch(x){}connect();};
- $("#plus").onclick=()=>setStage(Math.min(N,stage+1));
- $("#minus").onclick=()=>setStage(Math.max(1,stage-1));
+ $("#plus").onclick=()=>setStage(nextLive(stage,1));
+ $("#minus").onclick=()=>setStage(nextLive(stage,-1));
  $("#wipe").onclick=()=>{if(confirm("Remove every student's work from this class board? Their own device keeps their work."))
    {if(window.SYNC)SYNC.clearRoom(room);students={};paint();}};
  $("#sortn").onclick=()=>{sortBy="n";paint();};
@@ -49,18 +52,41 @@ let sortBy="n";
 function steps(){
  const w=$("#steps");w.innerHTML="";
  SC.forEach(c=>{
-  const on=c.n<=stage;
+  const off=!!skip[c.n], on=c.n<=stage&&!off;
   const b=el("button",null,c.n+" · "+c.short);
   b.style.cssText="border-radius:9px;padding:7px 12px;font-size:13px;font-weight:600;border:1.5px solid "+
-   (on?"var(--green)":"var(--line)")+";background:"+(on?"var(--soft)":"transparent")+";color:"+(on?"var(--green)":"var(--muted)");
+   (on?"var(--green)":"var(--line)")+";background:"+(on?"var(--soft)":"transparent")+";color:"+
+   (off?"var(--muted)":on?"var(--green)":"var(--muted)")+(off?";text-decoration:line-through;opacity:.5":"");
+  b.disabled=off;
   b.onclick=()=>setStage(c.n);
   w.appendChild(b);
  });
 }
+function skips(){
+ const w=$("#skips");w.innerHTML="";
+ SC.filter(c=>c.n>1&&c.n<SC.length).forEach(c=>{
+  const off=!!skip[c.n];
+  const b=el("button",null,(off?"\u2715 ":"")+c.n+" \u00b7 "+c.short);
+  b.style.cssText="border-radius:9px;padding:7px 12px;font-size:13px;font-weight:600;border:1.5px solid "+
+   (off?"var(--crimson)":"var(--line)")+";background:"+(off?"var(--warnBg)":"transparent")+";color:"+
+   (off?"var(--crimson)":"var(--muted)");
+  b.onclick=()=>{if(off)delete skip[c.n];else skip[c.n]=true;
+   try{localStorage.setItem("g6w5skip",JSON.stringify(skip));}catch(x){}
+   if(window.SYNC&&SYNC.available()&&room)SYNC.setSkip(room,skip);
+   steps();skips();codes();};
+  w.appendChild(b);
+ });
+ const off=Object.keys(skip).length;
+ w.appendChild(el("span","",'<span style="font-size:13px;color:var(--muted);align-self:center">'+
+  (off?"Students jump straight over "+(off===1?"that screen":"those screens")+".":"All screens are on.")+'</span>'));
+}
 function codes(){
  $("#codehint").innerHTML='<b>If a student cannot connect</b>, read the code for that screen out loud:<br>'+
-  SC.filter(c=>c.code).map(c=>c.n+" "+c.short+" = <b>"+c.code+"</b>").join(" &nbsp;·&nbsp; ");
+  SC.filter(c=>c.code&&!skip[c.n]).map(c=>c.n+" "+c.short+" = <b>"+c.code+"</b>").join(" &nbsp;·&nbsp; ");
 }
+function nextLive(from,dir){let i=from+dir;
+ while(i>=1&&i<=N&&skip[i])i+=dir;
+ return Math.max(1,Math.min(N,i));}
 function setStage(n){stage=n;steps();if(window.SYNC&&SYNC.available()&&room)SYNC.setStage(room,n);}
 
 function connect(){
@@ -70,6 +96,7 @@ function connect(){
  if(ref)SYNC.unwatch(ref);
  ref=SYNC.watchStudents(room,d=>{students=d||{};paint();});
  SYNC.setStage(room,stage);
+ SYNC.setSkip(room,skip);
 }
 
 function paint(){
@@ -83,14 +110,28 @@ function paint(){
  rows.forEach(r=>{
   const stale=Date.now()-(r.up||0)>90000;
   const c=el("div","stu"+(stale?" stale":""));
+  const cur=r.st||1, stuck=!((r.dn||[])[cur-1]);
   c.innerHTML='<div class="nm">'+esc(r.n)+'</div>'+
-   '<div class="meta">screen '+(r.st||1)+' of '+N+' · '+ago(r.up)+'</div>'+
-   '<div class="bars">'+SC.map((s,i)=>'<i class="'+((r.dn||[])[i]?"d":((r.st||1)>s.n?"c":""))+'"></i>').join("")+'</div>'+
+   '<div class="meta">screen '+cur+' of '+N+' · '+ago(r.up)+(stuck?' · <span style="color:var(--amber);font-weight:600">not finished</span>':'')+'</div>'+
+   '<div class="bars">'+SC.map((s,i)=>'<i class="'+((r.ex||[])[i]?"c":((r.dn||[])[i]?"d":""))+'"></i>').join("")+'</div>'+
    A.map(([k,lab])=>{const v=(r.a||{})[k];if(v==null||String(v).trim()==="")return "";
      return '<div class="r"><div class="k">'+lab+'</div><div class="v">'+esc(v)+'</div></div>';}).join("");
+  const id=idOf(r);
+  const act=el("div","");act.style.cssText="display:flex;gap:7px;margin-top:11px;flex-wrap:wrap;align-items:center";
+  const pb=el("button","btn ghost","Move on →");
+  pb.style.cssText="padding:6px 12px;font-size:13px";
+  pb.title="Let this student go to the next screen without finishing this one";
+  pb.onclick=()=>{if(window.SYNC)SYNC.pushStudent(room,id,Math.min(N,cur+1));
+   pb.textContent="Moved";setTimeout(()=>{pb.textContent="Move on →";},1800);};
+  const jb=document.createElement("select");
+  jb.style.cssText="border:1.5px solid var(--line);border-radius:9px;padding:6px 9px;font-size:13px;background:var(--card);color:var(--text)";
+  jb.innerHTML='<option value="">send to screen…</option>'+SC.filter(x=>!skip[x.n]).map(x=>'<option value="'+x.n+'">'+x.n+' · '+x.short+'</option>').join("");
+  jb.onchange=()=>{if(jb.value&&window.SYNC){SYNC.pushStudent(room,id,+jb.value);jb.value="";}};
+  act.appendChild(pb);act.appendChild(jb);c.appendChild(act);
   g.appendChild(c);
  });
 }
+function idOf(r){return Object.keys(students).find(k=>students[k]===r)||"";}
 function ago(t){if(!t)return "—";const s=Math.round((Date.now()-t)/1000);
  return s<10?"just now":s<60?s+"s ago":Math.round(s/60)+" min ago";}
 

@@ -90,7 +90,28 @@ Do not store anything else there. Press **Clear the class** on the teacher page 
 4. Press **Open the next screen** when you want the class to move. Everybody advances.
 5. Watch the cards. Each card shows a student's name, which screen they are on, a progress
    bar for all nine screens, and every answer they have typed so far, updating as they type.
+   A student who has not finished the screen they are on is marked **not finished**.
 6. A card fades when a student has done nothing for 90 seconds.
+
+### Moving one student on
+
+Every student card has **Move on →**. Press it and that student goes to the next screen
+without finishing the one they are on. They see a green message saying you moved them.
+The screen they skipped shows amber on their progress bar, so you can still see it was
+never finished, and it is left out of their checklist on screen 9.
+
+Next to it, **send to screen…** jumps that one student to any screen you choose — useful for
+a student who joins the lesson late.
+
+### Skipping a screen for the whole class
+
+Under *Not using a screen today? Switch it off*, tap any screen to turn it off.
+It goes red, and it disappears from the lesson for every student: **Next** jumps straight
+over it, nobody has to complete it, and it is left out of the end checklist.
+Tap it again to bring it back, even mid-lesson.
+
+Use it when you are short of time. Screen 7 is the one that carries the concept — switch
+that one off last.
 
 ### If a student cannot connect
 
