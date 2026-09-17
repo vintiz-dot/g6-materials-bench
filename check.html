@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Connection check</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+#shell{max-width:800px;padding-bottom:40px}
+.chk{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.crow{display:flex;gap:12px;padding:13px 15px;border-top:1px solid var(--line);align-items:flex-start}
+.crow:first-child{border-top:0}
+.cst{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;color:#fff;background:var(--muted)}
+.cst.y{background:var(--green)}.cst.n{background:var(--crimson)}.cst.w{background:var(--amber)}
+.cbody{flex:1;min-width:0}
+.ctitle{font-weight:700;font-size:15px;color:var(--ink)}
+.cval{font-size:13.5px;color:var(--text);word-break:break-all;margin-top:2px}
+.cfix{font-size:13.5px;color:var(--crimson);margin-top:6px;line-height:1.5}
+.cfix b{color:var(--crimson)}
+.verdict{border-radius:12px;padding:16px 18px;margin-bottom:16px;font-size:16px;font-weight:600}
+.verdict.y{background:var(--soft);border-left:5px solid var(--green);color:var(--ink)}
+.verdict.n{background:var(--warnBg);border-left:5px solid var(--crimson);color:var(--warnInk)}
+</style>
+</head>
+<body>
+<div id="bar"><span id="mark">TOS</span><div id="barTitle">Connection check</div></div>
+<div id="shell">
+ <div class="eyebrow">Run this before the lesson</div>
+ <h2 class="title">Is everything working?</h2>
+ <p class="sub">Open this page on the same link the students use. It tests every part of the chain and tells you exactly what to fix.</p>
+ <div id="verdict" class="verdict">Testing…</div>
+ <div class="chk" id="rows"></div>
+ <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+  <button class="btn g" id="again">Run the test again</button>
+  <a class="btn ghost" href="index.html" style="text-decoration:none;padding:11px 18px">Student page</a>
+  <a class="btn ghost" href="teacher.html" style="text-decoration:none;padding:11px 18px">Teacher page</a>
+ </div>
+ <div class="hint" style="margin-top:16px">If every row is green here but you still see no students, they are on an <b>old cached copy</b>.
+ Ask them to close the tab and reopen the link, or add <code>?v=2</code> to the end of it.</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script src="assets/sync.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const rows=$("#rows");
+let fails=0;
+function add(state,title,val,fix){
+ if(state==="n")fails++;
+ const d=document.createElement("div");d.className="crow";
+ d.innerHTML='<div class="cst '+state+'">'+(state==="y"?"✓":state==="n"?"✕":"!")+'</div>'+
+  '<div class="cbody"><div class="ctitle">'+title+'</div>'+
+  (val?'<div class="cval">'+val+'</div>':'')+
+  (fix&&state!=="y"?'<div class="cfix">'+fix+'</div>':'')+'</div>';
+ rows.appendChild(d);
+}
+function verdict(){
+ const v=$("#verdict");
+ if(fails===0){v.className="verdict y";v.textContent="All good. Students who open the student link will appear on your teacher page.";}
+ else{v.className="verdict n";v.textContent=fails+" problem"+(fails>1?"s":"")+" found. Fix the red rows below, then run the test again.";}
+}
+function run(){
+ rows.innerHTML="";fails=0;$("#verdict").className="verdict";$("#verdict").textContent="Testing…";
+ const L=window.LESSON||{};
+ add("y","Lesson loaded", (L.lesson?L.lesson.grade+" · "+L.lesson.title+" · "+L.lesson.week:"—")+
+   "  ·  build <b>"+(L.build||"none")+"</b>",
+   "");
+ const proto=location.protocol;
+ add(proto==="https:"?"y":proto==="file:"?"w":"y","Where this page is running", location.origin+location.pathname,
+   proto==="file:"?"You opened this from your own computer, not from the GitHub link. It usually still works, but <b>use the https:// link</b> for the real lesson so you and the students are on the same copy.":"");
+ const fb=(typeof firebase!=="undefined");
+ add(fb?"y":"n","Firebase script loaded", fb?"yes, version "+(firebase.SDK_VERSION||"?"):"NOT LOADED",
+   "The browser could not download Firebase from gstatic.com. Usually the school network or an ad blocker. Try another network, or ask IT to allow <b>www.gstatic.com</b>.");
+ const cfg=window.FIREBASE_CONFIG||{};
+ const hasCfg=!!(cfg.apiKey&&cfg.databaseURL);
+ add(hasCfg?"y":"n","Firebase settings filled in", hasCfg?cfg.databaseURL:"apiKey or databaseURL is empty",
+   "Open <b>assets/firebase-config.js</b> and paste the values from your Firebase project (README step 2). <b>databaseURL</b> is the one that matters.");
+ const room=(window.SYNC&&SYNC.room)?SYNC.room():"?";
+ add("y","This lesson's room", "<b>"+room+"</b> — every student who opens the student link joins this room, whatever class they type","");
+ if(!fb||!hasCfg){verdict();return;}
+ let app;
+ try{ app = firebase.apps.length?firebase.app():firebase.initializeApp(cfg); }
+ catch(e){ add("n","Starting Firebase","failed: "+e.message,"Check the values in assets/firebase-config.js for typos."); verdict(); return; }
+ const db=firebase.database();
+ let settled=false;
+ const to=setTimeout(()=>{ if(settled)return; settled=true;
+   add("n","Reaching the database","no answer after 8 seconds",
+     "The databaseURL may point at the wrong region, or the network is blocking it. Copy the URL again from the top of the Realtime Database page in Firebase.");
+   verdict(); },8000);
+ db.ref(".info/connected").on("value",s=>{
+  if(!s.val())return;
+  if(settled)return; settled=true; clearTimeout(to);
+  add("y","Reaching the database","connected","");
+  const probe=db.ref("rooms/"+room+"/_check");
+  probe.set({t:Date.now()})
+   .then(()=>probe.once("value"))
+   .then(v=>{
+     add(v.val()?"y":"n","Writing and reading data", v.val()?"a test value was saved and read back":"write appeared to work but nothing came back","");
+     return probe.remove();
+   })
+   .catch(e=>{
+     add("n","Writing and reading data","PERMISSION DENIED — "+e.message,
+       "Your database rules are blocking it. In Firebase go to <b>Realtime Database → Rules</b> and publish exactly this:<br><br>"+
+       '<code style="display:block;white-space:pre;background:var(--soft);color:var(--text);padding:10px;border-radius:8px;margin-top:6px">'+
+       '{\\n  "rules": {\\n    "rooms": {\\n      ".read": true,\\n      ".write": true\\n    }\\n  }\\n}</code>');
+   })
+   .then(()=>{
+     return db.ref("rooms/"+room+"/students").once("value");
+   })
+   .then(v=>{
+     const st=v?v.val():null, names=st?Object.keys(st).map(k=>st[k].n||"?"):[];
+     add(names.length?"y":"w","Students in the room right now",
+       names.length?names.length+": "+names.join(", "):"nobody yet",
+       "That is normal before the lesson. During the lesson, if this stays empty while students say the page is open, they are on an old cached copy — tell them to close the tab and reopen the link.");
+     const stage=db.ref("rooms/"+room+"/stage");
+     return stage.once("value").then(sv=>{
+       add("y","Current screen for the class", String(sv.val()||1),"");
+     });
+   })
+   .catch(()=>{})
+   .then(verdict);
+ });
+}
+$("#again").onclick=run;
+run();
+})();
+</script>
+</body>
+</html>

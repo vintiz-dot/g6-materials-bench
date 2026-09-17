@@ -9,14 +9,15 @@ let room="", ref=null, students={}, stage=1, skip={};
 try{skip=JSON.parse(localStorage.getItem("g6w5skip")||"{}");}catch(e){skip={};}
 try{room=localStorage.getItem("g6w5room")||"";}catch(e){}
 
-const A=[["quiz","Quiz scores"],["table","Property table"],["groups","Groups"],["q1","Question 1"],["q2","Question 2"],["qs","Sorted A/B/C"],
+const A=(window.LESSON.teacherFields)||[["quiz","Quiz scores"],["table","Property table"],["groups","Groups"],["q1","Question 1"],["q2","Question 2"],["qs","Sorted A/B/C"],
  ["stand","Stands"],["standWhy","Because"],["why","Why-matching"],["quadWrong","Wrong box"],
  ["link","Link sentence"],["durPos","Lasting → easy"],["durNeg","Lasting → impossible"],
  ["def","Our rule"],["match","Book Q1"],["talk","Talk & Write"],["extra","Extra work"]];
 
 function boot(){
  $("#app").innerHTML=
- '<div class="eyebrow">The Olympia Schools · Grade 6 · Week 5 · Period E9</div>'+
+ '<div class="eyebrow">The Olympia Schools · '+esc(((window.LESSON.lesson)||{}).grade||"Grade 6")+
+ ' · '+esc(((window.LESSON.lesson)||{}).week||"Week 5")+' · Period '+esc(((window.LESSON.lesson)||{}).period||"E9")+'</div>'+
  '<h2 class="title">Teacher control</h2>'+
  '<p class="sub">Open the screens one at a time. Everybody online moves with you, finished or not.</p>'+
  '<div class="tbar">'+
@@ -194,6 +195,9 @@ function ago(t){if(!t)return "—";const s=Math.round((Date.now()-t)/1000);
  return s<10?"just now":s<60?s+"s ago":Math.round(s/60)+" min ago";}
 
 boot();
+try{const b=document.getElementById("barTitle");
+ if(b&&window.LESSON.build)b.insertAdjacentHTML("afterend",
+  '<span style="font-size:11px;color:#7FB3C8;margin-left:8px">build '+window.LESSON.build+'</span>');}catch(e){}
 setInterval(()=>{paint();},10000);
 setTimeout(connect,1500);
 })();

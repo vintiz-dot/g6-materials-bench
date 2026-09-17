@@ -3,6 +3,8 @@
    Language level: A1–A2. Short sentences. One idea per line. */
 
 window.LESSON = {
+build: "2026-09-17a",
+lesson: { grade:"Grade 6", title:"Materials & Plastic", week:"Week 5", period:"E9", pages:"pp. 24-25" },
 
 goals: [
   ["Science goal",  "I can say WHY we use a material for a job."],

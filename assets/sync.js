@@ -19,7 +19,7 @@ function boot(){
 
 /* One shared room. Everybody who opens the page is in it, whatever
    class they type — the class is only a label on their card. */
-const ROOM = "LIVE";
+const ROOM = "G6W5";
 function room(){ return ROOM; }
 
 window.SYNC = {

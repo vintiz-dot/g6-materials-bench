@@ -229,4 +229,25 @@ To change wording, objects or questions, edit **`assets/data.js`** only.
 
 ---
 
+---
+
+## Before every lesson — the two-minute check
+
+**Open `check.html` on the same link you give the students.** It tests the lesson file and its
+build number, whether you are on the real web link or a local file, whether Firebase loaded,
+whether your settings are filled in, which room this lesson uses, whether it can reach the
+database, whether it can actually **write and read back**, and who is in the room right now.
+Every red row comes with the exact fix.
+
+If every row is green and you still see nobody, the students are on a **cached copy**. Tell them
+to close the tab and reopen the link, or hand out the link with `?v=2` on the end.
+
+The build number shows next to the title on the teacher page. If yours differs from a student's,
+one of you is on an old copy.
+
+**Why this lesson used to show no students:** each student was put in a room named after whatever
+they typed as their class, so `6H 1` was invisible to a teacher on `6H1`, silently. Each lesson
+now has one fixed room set in code — this one is `G6W5` — and the class a student types is only
+a label on their card.
+
 Built for Victor Moronu, The Olympia Schools, Hanoi.
