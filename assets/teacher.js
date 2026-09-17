@@ -93,13 +93,16 @@ function skips(){
   (off?"Students jump straight over "+(off===1?"that screen":"those screens")+".":"All screens are on.")+'</span>'));
 }
 function codes(){
- $("#codehint").innerHTML='<b>If a student cannot connect</b>, read the code for that screen out loud:<br>'+
-  SC.filter(c=>c.code&&!skip[c.n]).map(c=>c.n+" "+c.short+" = <b>"+c.code+"</b>").join(" &nbsp;·&nbsp; ");
+ const cur=SC[stage-1];
+ $("#codehint").innerHTML='<b>The class is on screen '+stage+' — '+esc(cur?cur.title:"")+'.</b><br>'+
+  'A student who joins late types their name and class and goes straight here. '+
+  'Nobody can get ahead of this screen.'+
+  (window.SYNC&&SYNC.configured?"":'<br><span style="color:var(--crimson)">Firebase is not set up, so students move at their own speed and you cannot hold them.</span>');
 }
 function nextLive(from,dir){let i=from+dir;
  while(i>=1&&i<=N&&skip[i])i+=dir;
  return Math.max(1,Math.min(N,i));}
-function setStage(n){stage=n;steps();beam();race();if(window.SYNC&&SYNC.available()&&room)SYNC.setStage(room,n);}
+function setStage(n){stage=n;steps();codes();beam();race();if(window.SYNC&&SYNC.available()&&room)SYNC.setStage(room,n);}
 function beam(){const f=$("#pv");if(!f||!f.contentWindow)return;
  try{f.contentWindow.postMessage({go:stage,skip:skip},"*");}catch(e){}}
 

@@ -141,7 +141,9 @@ function liveBadge(){
 }
 
 /* ───────── nav ───────── */
-function maxOpen(){let m=1;for(let i=1;i<=N;i++){if(S.open[i]||i<=remoteStage)m=i;else break;}return m;}
+function linked(){return !!(window.SYNC&&SYNC.available()&&SYNC.configured);}
+function maxOpen(){return linked()?Math.max(1,remoteStage):N;}
+function openTo(n){return n<=maxOpen();}
 function dots(){const d=$("#dots");d.innerHTML="";for(let i=1;i<=N;i++){const x=el("div","dot");
  if(!live(i)){x.classList.add("skip");d.appendChild(x);continue;}
  if(done(i)&&i<S.stage)x.classList.add("done");if(i===S.stage)x.classList.add("now");d.appendChild(x);}}
@@ -150,6 +152,7 @@ function timer(m){clearInterval(tInt);const end=Date.now()+m*60000;const t=()=>{
  c.textContent=Math.floor(r/60000)+":"+String(Math.floor(r%60000/1000)).padStart(2,"0");
  c.style.color=r<=0?"#F07A63":r<60000?"#E0A93F":"#9FC4D4";};t();tInt=setInterval(t,1000);}
 function show(n){
+ if(n>maxOpen())n=maxOpen();
  if(!live(n)){const f=nextOf(n)||prevOf(n)||1;if(f!==n)return show(f);}
  S.stage=n;save();
  document.querySelectorAll(".scr").forEach(s=>{s.classList.remove("on");});
@@ -160,37 +163,35 @@ function show(n){
  $("#barTitle").textContent=n+" / "+N+" · "+cfg.title;
  if(n!==3){sel=null;const pk=$("#picker");if(pk){pk.hidden=true;pk.innerHTML="";}}
  window.scrollTo(0,0);
- if(S.open[n]||n<=remoteStage){S.open[n]=true;timer(cfg.min);render(n);}
- else{clearInterval(tInt);$("#clock").textContent="🔒";gate(n);}
+ S.open[n]=true;timer(cfg.min);render(n);
  refresh();
 }
 function refresh(){
  const n=S.stage,ok=done(n);
  dots();
- const nx=$("#next"),last=!nextOf(n);
+ const nx=$("#next"),nxt=nextOf(n);
  $("#back").disabled=!prevOf(n);
- if(last){nx.textContent="Save my page";nx.disabled=false;$("#navNote").textContent="Print it, or copy it to your teacher.";return;}
- nx.textContent="Next";
- const unlocked=S.open[n]||n<=remoteStage;
- nx.disabled=!unlocked||!ok;
- $("#navNote").textContent=!unlocked?"Wait for your teacher."
-  :S.excused[n]?"Your teacher said you can go on."
-  :ok?"Finished. You can go on.":todo(n);
+ if(!nxt){nx.textContent="Save my page";nx.disabled=false;$("#navNote").textContent="Print it, or copy it to your teacher.";return;}
+ const joining=(n===1&&remoteStage>1&&linked());
+ nx.textContent=joining?"Join the class →":"Next";
+ const openNext=openTo(nxt);
+ nx.disabled=!ok||!openNext;
+ $("#navNote").textContent=
+   !ok?todo(n)
+   :!openNext?"Finished. Wait — your teacher will open the next screen."
+   :S.excused[n]?"Your teacher said you can go on."
+   :joining?"Your class is on screen "+remoteStage+". Tap to join them."
+   :"Finished. You can go on.";
 }
 $("#back").onclick=()=>{const p=prevOf(S.stage);if(p)show(p);};
-$("#next").onclick=()=>{const nx=nextOf(S.stage);
- if(nx){if(done(S.stage))show(nx);}else window.print();};
+$("#next").onclick=()=>{
+ const nx=nextOf(S.stage);
+ if(!nx){window.print();return;}
+ if(!done(S.stage))return;
+ if(S.stage===1&&remoteStage>1&&linked()){show(remoteStage);return;}
+ if(openTo(nx))show(nx);
+};
 
-function gate(n){
- const sec=document.getElementById("s"+n);
- sec.innerHTML='<div class="gate"><div class="lockicon">LOCKED</div><h3>Wait for your teacher</h3>'+
- '<p>Your teacher will say a number with two digits. Type it here.<br><span class="vn">Cô/thầy sẽ đọc một số có hai chữ số.</span></p>'+
- '<div class="codebox"><input id="gc" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Code"></div></div>';
- const i=sec.querySelector("#gc");i.focus();
- i.addEventListener("input",()=>{if(i.value.length<2)return;
-  if(i.value===SC[n-1].code){S.open[n]=true;save();timer(SC[n-1].min);render(n);refresh();}
-  else{i.classList.add("bad");setTimeout(()=>{i.classList.remove("bad");i.value="";},420);}});
-}
 
 /* ───────── concept-check block ───────── */
 function ccqBlock(id,spec,host,onDone){
@@ -199,11 +200,16 @@ function ccqBlock(id,spec,host,onDone){
  spec.items.forEach((it,i)=>{
   const row=el("div","ccqi",'<p>'+esc(it.q)+'</p>');
   const ob=el("div","ccqo");
-  it.o.forEach((o,k)=>{
-   const b=el("button",g[i]&&k===it.a?"ok":"",o);
+  const ord=it.o.map((_,k)=>k);
+  for(let k=ord.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));
+   const t=ord[k];ord[k]=ord[j];ord[j]=t;}
+  const right=ord.indexOf(it.a);
+  ord.forEach(oi=>0);
+  ord.map(oi=>it.o[oi]).forEach((o,k)=>{
+   const b=el("button",g[i]&&k===right?"ok":"",o);
    b.onclick=()=>{
     if(g[i])return;
-    if(k===it.a){g[i]=true;save();b.classList.add("ok");
+    if(k===right){g[i]=true;save();b.classList.add("ok");
      row.querySelectorAll(".ccqo button").forEach(x=>{if(x!==b)x.disabled=true;});
      let w=row.querySelector(".ccqw");if(!w){w=el("div","ccqw g");row.appendChild(w);}
      w.className="ccqw g";w.textContent=it.w;
@@ -219,7 +225,7 @@ function ccqBlock(id,spec,host,onDone){
   });
   row.appendChild(ob);
   if(g[i]){const w=el("div","ccqw g",esc(it.w));row.appendChild(w);
-   ob.querySelectorAll("button").forEach((x,k)=>{if(k!==it.a)x.disabled=true;});}
+   ob.querySelectorAll("button").forEach((x,k)=>{if(k!==right)x.disabled=true;});}
   c.appendChild(row);
  });
  if(spec.items.every((z,j)=>g[j]))c.appendChild(el("div","ccqdone","✓ Good. You can start now."));
@@ -314,8 +320,8 @@ function r1(){
  '<input id="cl" placeholder="6H1" style="width:100%;border:0;border-bottom:2px solid var(--line);background:transparent;padding:8px 0;font-size:18px;font-family:var(--display);font-weight:600;color:var(--ink)"></div>'+
  '<div id="nickwrap" hidden><div class="card" style="text-align:center"><div class="eyebrow" style="text-align:left">Your racing name</div><div id="nick" style="font-family:var(--display);font-size:26px;font-weight:700;color:var(--green);margin:6px 0 10px"></div><button class="btn ghost" id="reroll">Give me another animal</button><div style="font-size:13px;color:var(--muted);margin-top:9px">This is the name on the class leaderboard.</div></div></div><div id="goalwrap" hidden><div class="eyebrow">Today you will learn</div><div class="goals">'+
  L.goals.map(([k,v])=>'<div class="goal"><b>'+k+'</b><span>'+v+'</span></div>').join("")+'</div></div>'+
- '<div class="dark"><b>How this works.</b><br>There are 12 screens.<br>Each screen is locked. Your teacher says a number. Then it opens.<br>You cannot go on until you finish the work on the screen.'+
- '<div class="vn" style="color:#9FC4D4;margin-top:6px">Bạn phải làm xong mới sang màn hình tiếp theo.</div></div>'+
+ '<div class="dark"><b>How this works.</b><br>There are 12 screens.<br>Your teacher opens them one at a time.<br>You cannot go on until you finish the work on the screen.<br>If you join late, you go straight to the screen the class is on.'+
+ '<div class="vn" style="color:#9FC4D4;margin-top:6px">Bạn phải làm xong mới sang màn hình tiếp theo. Vào muộn thì bạn vào thẳng màn hình cả lớp đang làm.</div></div>'+
  '</div>';
  const nm=s.querySelector("#nm"),cl=s.querySelector("#cl"),gw=s.querySelector("#goalwrap");
  const nw=s.querySelector("#nickwrap"),nk=s.querySelector("#nick");
@@ -798,8 +804,10 @@ function watchRemote(){
  watching=r;
  SYNC.watchStage(S.cls,n=>{
   const was=remoteStage;remoteStage=n||1;
-  if(remoteStage>was){for(let i=1;i<=remoteStage;i++)S.open[i]=true;save();
-   if(!document.getElementById("s"+S.stage).querySelector(".gate"))refresh();else show(S.stage);}
+  if(remoteStage===was){refresh();return;}
+  for(let i=1;i<=remoteStage;i++)S.open[i]=true;save();
+  if(remoteStage>was&&done(S.stage)&&S.stage<remoteStage&&nextOf(S.stage))show(nextOf(S.stage));
+  else refresh();
  });
  SYNC.watchBoard(S.cls,rs=>{boardRows=rs||[];if(boardPaint)boardPaint();});
  SYNC.watchSkip(S.cls,sk=>{

@@ -27,8 +27,8 @@ https://YOUR-USERNAME.github.io/materials-bench/            ← give this to stu
 https://YOUR-USERNAME.github.io/materials-bench/teacher.html ← keep this for yourself
 ```
 
-The student page works fully at this point, using the spoken codes below.
-The live teacher view needs step 2.
+Without step 2 the student page still works, but every screen is open from the start and
+you cannot hold the class together. Do step 2.
 
 ---
 
@@ -85,9 +85,10 @@ Do not store anything else there. Press **Clear the class** on the teacher page 
 
 1. Open `teacher.html` on your own screen. Type the class, e.g. **6H1**.
 2. Send the student link in the meeting chat.
-3. Students type their name and class on screen 1. The class they type must match
-   what you typed — `6H1`, not `6h 1`.
-4. Press **Open the next screen** when you want the class to move. Everybody advances.
+3. Students type their name and class on screen 1, pick a racing animal, and tap
+   **Join the class**. The class they type must match what you typed — `6H1`, not `6h 1`.
+4. Press **Open the next screen** when you want the class to move. Everybody who has
+   finished advances; anybody still working stays where they are and follows when they finish.
 5. Watch the cards. Each card shows a student's name, which screen they are on, a progress
    bar for all twelve screens, and every answer they have typed so far, updating as they type.
    A student who has not finished the screen they are on is marked **not finished**.
@@ -126,24 +127,16 @@ Tap it again to bring it back, even mid-lesson.
 Use it when you are short of time. Screen 7 is the one that carries the concept — switch
 that one off last.
 
-### If a student cannot connect
+### Students who join late
 
-Every screen also has a two-digit code. Read it out and they can carry on alone.
+There are no codes. A latecomer types their name and class and the button says
+**Join the class →** — one tap and they are on whatever screen you have open.
+Nobody can get ahead of you: when a student finishes a screen before you open the next one,
+their button says *Finished. Wait — your teacher will open the next screen.* The moment you
+open it, everyone who was waiting moves forward on their own.
 
-| Screen | Code |
-|---|---|
-| 2 · Warm-up race | **17** |
-| 3 · Eight words | **43** |
-| 4 · The pile | **26** |
-| 5 · Your questions | **58** |
-| 6 · Where do you stand | **34** |
-| 7 · Why is it made of that? | **71** |
-| 8 · Property and job | **92** |
-| 9 · What each property does | **39** |
-| 10 · Book page 25 | **60** |
-| 11 · Exit ticket race | **85** |
-
-The codes are printed on the teacher page too. Do not show that page to the class.
+If Firebase is not set up, there is nothing holding the class together: every screen is open
+and students move at their own speed. The teacher page says so plainly when that is the case.
 
 ---
 

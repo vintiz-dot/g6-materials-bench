@@ -220,16 +220,16 @@ sayback:{
 
 screens: [
   {n:1,  code:null, min:1, title:"Start",                   short:"Start"},
-  {n:2,  code:"17", min:5, title:"Warm-up race",            short:"Warm-up", quiz:"warm"},
-  {n:3,  code:"43", min:3, title:"Eight words",             short:"Words"},
-  {n:4,  code:"26", min:6, title:"The pile",                short:"Pile"},
-  {n:5,  code:"58", min:3, title:"Your questions",          short:"Questions"},
-  {n:6,  code:"34", min:2, title:"Where do you stand",      short:"Stand"},
-  {n:7,  code:"71", min:4, title:"Why is it made of that?", short:"Why"},
-  {n:8,  code:"92", min:6, title:"Property and job",        short:"Property"},
-  {n:9,  code:"39", min:6, title:"What each property does", short:"Table"},
-  {n:10, code:"60", min:4, title:"Book page 25",            short:"Book"},
-  {n:11, code:"85", min:4, title:"Exit ticket race",        short:"Exit", quiz:"exit"},
+  {n:2,  code:null, min:5, title:"Warm-up race",            short:"Warm-up", quiz:"warm"},
+  {n:3,  code:null, min:3, title:"Eight words",             short:"Words"},
+  {n:4,  code:null, min:6, title:"The pile",                short:"Pile"},
+  {n:5,  code:null, min:3, title:"Your questions",          short:"Questions"},
+  {n:6,  code:null, min:2, title:"Where do you stand",      short:"Stand"},
+  {n:7,  code:null, min:4, title:"Why is it made of that?", short:"Why"},
+  {n:8,  code:null, min:6, title:"Property and job",        short:"Property"},
+  {n:9,  code:null, min:6, title:"What each property does", short:"Table"},
+  {n:10, code:null, min:4, title:"Book page 25",            short:"Book"},
+  {n:11, code:null, min:4, title:"Exit ticket race",        short:"Exit", quiz:"exit"},
   {n:12, code:null, min:1, title:"Your page",               short:"Summary"}
 ]
 };

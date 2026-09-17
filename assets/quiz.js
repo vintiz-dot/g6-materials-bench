@@ -27,9 +27,21 @@ function burst(host){
  })();
 }
 
+/* ---------- shuffle ---------- */
+function shuffled(spec){
+ return spec.map(item=>{
+  const order=item.o.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+   const t=order[i];order[i]=order[j];order[j]=t;}
+  return {q:item.q, w:item.w, o:order.map(i=>item.o[i]),
+          a:order.indexOf(item.a), order:order};
+ });
+}
+
 /* ---------- main ---------- */
-function run(host,spec,opts){
+function run(host,rawSpec,opts){
  opts=opts||{};
+ const spec=shuffled(rawSpec);
  const st={i:0,pts:0,streak:0,best:0,correct:0,answers:[],locked:false};
  let tick=null;
 
@@ -97,7 +109,7 @@ function run(host,spec,opts){
    gained=Math.round((100+Math.round(100*frac))*mult);
    st.pts+=gained;
   }else st.streak=0;
-  st.answers.push(pick);
+  st.answers.push(pick<0?-1:item.order[pick]);
 
   host.querySelectorAll(".qo").forEach(b=>{
    const i=+b.dataset.i;
@@ -111,7 +123,7 @@ function run(host,spec,opts){
    '<span>'+esc(item.w)+'</span>';
   if(ok)burst(host.querySelector(".qcard"));
   const sc=host.querySelector(".qscore");if(sc)sc.textContent=st.pts+" pts";
-  if(opts.onAnswer)opts.onAnswer({i:st.i,pick:pick,ok:ok,pts:st.pts,streak:st.streak});
+  if(opts.onAnswer)opts.onAnswer({i:st.i,pick:pick<0?-1:item.order[pick],ok:ok,pts:st.pts,streak:st.streak});
 
   setTimeout(()=>{st.i++;if(st.i<spec.length)q();else end();},ok?1900:2600);
  }
