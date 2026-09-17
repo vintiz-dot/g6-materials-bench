@@ -31,12 +31,23 @@ function boot(){
  '<button class="btn g" id="plus">Open the next screen &rarr;</button>'+
  '<button class="btn ghost" id="wipe" style="color:var(--crimson);border-color:var(--crimson)">Clear the class</button></div>'+
  '<div class="hint" style="margin-top:12px" id="codehint"></div></div>'+
+ '<div class="tsplit">'+
+ '<div class="tprev"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
+ '<div class="eyebrow" style="margin:0">What the class sees now</div>'+
+ '<div style="display:flex;gap:7px"><button class="btn ghost" id="pvreload" style="padding:5px 11px;font-size:12.5px">Reset</button>'+
+ '<a class="btn ghost" id="pvopen" href="index.html" target="_blank" rel="noopener" style="padding:5px 11px;font-size:12.5px;text-decoration:none">Open full size</a></div></div>'+
+ '<div class="frame"><iframe id="pv" title="Student view" src="index.html?preview=1"></iframe></div>'+
+ '<div style="font-size:12.5px;color:var(--muted);margin-top:9px">This is a real copy of the student page. Click about in it — nothing you do here reaches the class or the board.</div>'+
+ '</div></div>'+
+ '<div class="tstu">'+
  '<div class="tbar"><button class="btn ghost" id="sortn">Sort by name</button>'+
  '<button class="btn ghost" id="sortp">Sort by progress</button>'+
  '<label class="pillstat" style="font-weight:500;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="only" style="width:16px;height:16px;accent-color:var(--green)"> show only students who are behind</label></div>'+
- '<div class="tgrid" id="grid"></div><div id="empty"></div>';
+ '<div class="tgrid" id="grid"></div><div id="empty"></div></div></div>';
 
  steps();skips();codes();paint();
+ $("#pvreload").onclick=()=>{const f=$("#pv");f.src="index.html?preview=1&r="+Date.now();};
+ window.addEventListener("message",e=>{if(e.data&&e.data.ready)beam();});
  $("#room").oninput=e=>{room=e.target.value;try{localStorage.setItem("g6w5room",room);}catch(x){}connect();};
  $("#plus").onclick=()=>setStage(nextLive(stage,1));
  $("#minus").onclick=()=>setStage(nextLive(stage,-1));
@@ -73,7 +84,7 @@ function skips(){
   b.onclick=()=>{if(off)delete skip[c.n];else skip[c.n]=true;
    try{localStorage.setItem("g6w5skip",JSON.stringify(skip));}catch(x){}
    if(window.SYNC&&SYNC.available()&&room)SYNC.setSkip(room,skip);
-   steps();skips();codes();};
+   steps();skips();codes();beam();};
   w.appendChild(b);
  });
  const off=Object.keys(skip).length;
@@ -87,7 +98,9 @@ function codes(){
 function nextLive(from,dir){let i=from+dir;
  while(i>=1&&i<=N&&skip[i])i+=dir;
  return Math.max(1,Math.min(N,i));}
-function setStage(n){stage=n;steps();if(window.SYNC&&SYNC.available()&&room)SYNC.setStage(room,n);}
+function setStage(n){stage=n;steps();beam();if(window.SYNC&&SYNC.available()&&room)SYNC.setStage(room,n);}
+function beam(){const f=$("#pv");if(!f||!f.contentWindow)return;
+ try{f.contentWindow.postMessage({go:stage,skip:skip},"*");}catch(e){}}
 
 function connect(){
  const ok=window.SYNC&&SYNC.available();

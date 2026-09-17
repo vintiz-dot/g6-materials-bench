@@ -2,6 +2,8 @@
 (function(){
 "use strict";
 const L=window.LESSON, SC=L.screens, N=SC.length;
+const PREVIEW=new URLSearchParams(location.search).has("preview");
+const LSKEY=PREVIEW?"g6w5preview":"g6w5v2";
 
 /* ───────── icons ───────── */
 const IC={
@@ -36,11 +38,11 @@ const BLANK={id:"",name:"",cls:"",stage:1,open:{1:true},excused:{},skip:{},read:
  placed:{},q1:"",q2:"",qs:{},stand:null,standWhy:"",why:{},whyQ:null,quad:{},link:"",durPos:"",durNeg:"",def:"",
  match:{},mTries:0,talk:{},extra:{}};
 let S;
-try{S=Object.assign({},BLANK,JSON.parse(localStorage.getItem("g6w5v2")||"{}"));}catch(e){S=Object.assign({},BLANK);}
+try{S=Object.assign({},BLANK,JSON.parse(localStorage.getItem(LSKEY)||"{}"));}catch(e){S=Object.assign({},BLANK);}
 if(!S.groups||!S.groups.length)S.groups=[{n:"",items:[]},{n:"",items:[]},{n:"",items:[]}];
 if(!S.id)S.id="s"+Math.random().toString(36).slice(2,10);
 let remoteStage=1;
-function save(){try{localStorage.setItem("g6w5v2",JSON.stringify(S));}catch(e){}pushSoon();}
+function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S));}catch(e){}pushSoon();}
 
 /* ───────── helpers ───────── */
 const $=s=>document.querySelector(s);
@@ -85,9 +87,9 @@ function prevOf(n){for(let i=n-1;i>=1;i--)if(live(i))return i;return null;}
 
 /* ───────── sync ───────── */
 let pT=null;
-function pushSoon(){if(!window.SYNC||!SYNC.available())return;clearTimeout(pT);pT=setTimeout(pushNow,1200);}
+function pushSoon(){if(PREVIEW||!window.SYNC||!SYNC.available())return;clearTimeout(pT);pT=setTimeout(pushNow,1200);}
 function pushNow(){
- if(!window.SYNC||!SYNC.available()||!txt(S.cls))return;
+ if(PREVIEW||!window.SYNC||!SYNC.available()||!txt(S.cls))return;
  SYNC.push(S.cls,S.id,{
   n:txt(S.name)||"(no name)",c:txt(S.cls),st:S.stage,up:Date.now(),
   dn:SC.map(c=>done(c.n)?1:0),
@@ -106,7 +108,7 @@ function pushNow(){
 }
 function liveBadge(){
  let b=$("#live");
- if(!window.SYNC||!SYNC.configured){if(b)b.remove();return;}
+ if(PREVIEW||!window.SYNC||!SYNC.configured){if(b)b.remove();return;}
  if(!b){b=el("div","","<span class=\"d\"></span><span id=\"livetx\">connecting…</span>");b.id="live";document.body.appendChild(b);}
  const ok=SYNC.available();
  b.classList.toggle("on",ok);
@@ -594,7 +596,7 @@ function toast(msg){
  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),4200);
 }
 function watchRemote(){
- if(!window.SYNC||!SYNC.available())return;
+ if(PREVIEW||!window.SYNC||!SYNC.available())return;
  const r=SYNC.room(S.cls);
  if(!r||r===watching)return;
  watching=r;
@@ -618,6 +620,22 @@ function watchRemote(){
   toast("Your teacher moved you on. You do not need to finish that screen.");
   show(to);
  });
+}
+
+/* ───────── preview mode (teacher page iframe) ───────── */
+if(PREVIEW){
+ for(let i=1;i<=N;i++)S.open[i]=true;
+ if(!txt(S.name))S.name="Preview";
+ S.cls="";
+ document.documentElement.classList.add("previewing");
+ window.addEventListener("message",e=>{
+  const m=e.data||{};
+  if(m.skip){S.skip={};Object.keys(m.skip).forEach(k=>{if(m.skip[k])S.skip[+k]=true;});}
+  if(m.go){for(let i=1;i<=N;i++)S.open[i]=true;save();show(Math.max(1,Math.min(N,m.go)));}
+  else if(m.skip){save();show(S.stage);}
+  if(m.reset){try{localStorage.removeItem(LSKEY);}catch(x){}location.reload();}
+ });
+ try{parent.postMessage({ready:true},"*");}catch(e){}
 }
 
 /* ───────── boot ───────── */

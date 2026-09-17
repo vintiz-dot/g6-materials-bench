@@ -93,6 +93,19 @@ Do not store anything else there. Press **Clear the class** on the teacher page 
    A student who has not finished the screen they are on is marked **not finished**.
 6. A card fades when a student has done nothing for 90 seconds.
 
+### The preview window
+
+On the left of the dashboard is **What the class sees now** — a live copy of the student page.
+It follows you: press *Open the next screen* and the preview moves too, so you always know
+what is in front of the class without a second device.
+
+It is a real working copy, so you can click through it while you explain. Nothing you do in it
+reaches the class and nothing appears on the board. **Reset** clears it; **Open full size**
+opens the real student page in a new tab, which is what you share to your screen if you want
+to demonstrate something properly.
+
+On a narrow window the preview sits above the student cards instead of beside them.
+
 ### Moving one student on
 
 Every student card has **Move on →**. Press it and that student goes to the next screen
