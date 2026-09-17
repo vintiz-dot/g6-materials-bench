@@ -19,7 +19,7 @@ function boot(){
 
 /* One shared room. Everybody who opens the page is in it, whatever
    class they type — the class is only a label on their card. */
-const ROOM = "G6W5";
+const ROOM = "G6HW5";
 function room(){ return ROOM; }
 
 /* Firebase rejects a write that contains undefined ANYWHERE inside the object,
